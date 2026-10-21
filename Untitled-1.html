@@ -1,0 +1,576 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BillMate - Bill Management</title>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#f4f6fb;color:#20243a}
+button,input,select{font:inherit}
+button{cursor:pointer}
+.app{display:flex;min-height:100vh}
+.sidebar{width:235px;background:white;padding:25px 17px;border-right:1px solid #e7e9f0}
+.logo{font-size:25px;font-weight:bold;color:#6558e8;margin:0 10px 40px}
+.logo span{color:#20243a}
+.nav-title{font-size:11px;color:#999;margin:20px 10px 12px}
+.nav button{display:block;width:100%;text-align:left;padding:13px 12px;margin-bottom:6px;border:0;border-radius:9px;background:white;color:#60677a}
+.nav button:hover,.nav button.active{background:#efedff;color:#6558e8}
+main{flex:1;min-width:0;padding:28px}
+header{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:30px}
+header h1{font-size:26px}
+header p{color:#888;margin-top:7px;font-size:13px}
+.profile{background:#e9e6ff;color:#6558e8;padding:13px;border-radius:50%;font-weight:bold}
+.welcome{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:22px}
+.welcome h2{font-size:20px}
+.welcome p{font-size:13px;color:#858b9b;margin-top:7px}
+.primary{border:0;background:#6558e8;color:white;padding:12px 16px;border-radius:9px;font-weight:bold}
+.primary:hover{background:#5144d2}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:22px}
+.card,.panel{background:white;border:1px solid #e9ebf2;border-radius:14px;padding:20px;box-shadow:0 4px 15px #20243a08}
+.stat-label{color:#7d8495;font-size:13px}
+.stat-value{font-size:25px;font-weight:bold;margin:17px 0 9px}
+.stat-note{font-size:11px;color:#888}
+.purple{color:#6558e8}.green{color:#168a63}.orange{color:#c87916}.red{color:#d34d5c}
+.layout{display:grid;grid-template-columns:1.5fr 1fr;gap:18px}
+.panel{padding:0;overflow:hidden;margin-bottom:18px}
+.panel-head{display:flex;justify-content:space-between;align-items:center;padding:20px;border-bottom:1px solid #f0f1f5}
+.panel-head h3{font-size:15px}
+.panel-head p{font-size:11px;color:#888;margin-top:5px}
+.bill{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid #f0f1f5}
+.bill-icon{width:39px;height:39px;border-radius:10px;background:#efedff;display:grid;place-items:center;font-size:19px}
+.bill-info{flex:1;min-width:0}
+.bill-info strong{font-size:13px;display:block;overflow-wrap:anywhere}
+.bill-info small{display:block;color:#888;margin-top:5px;font-size:11px}
+.amount{font-size:13px;font-weight:bold;white-space:nowrap}
+.status{display:inline-block;padding:6px 8px;border-radius:6px;font-size:10px;font-weight:bold;white-space:nowrap}
+.Pending{background:#fff2dc;color:#bb7515}
+.Upcoming{background:#efedff;color:#6558e8}
+.Paid{background:#e4f7ed;color:#168a63}
+.Overdue{background:#ffe8eb;color:#d34d5c}
+.view-btn{border:0;background:none;color:#6558e8;font-size:12px;font-weight:bold}
+.chart{height:145px;display:flex;align-items:end;gap:13px;padding:18px 20px}
+.bar-col{flex:1;display:flex;flex-direction:column;justify-content:end;align-items:center;gap:8px;height:100%}
+.bar{width:min(30px,80%);background:#dcd8ff;border-radius:5px 5px 0 0;min-height:5px}
+.bar.current{background:#6558e8}
+.bar-col small{font-size:10px;color:#888}
+.category{padding:12px 20px}
+.category-row{display:flex;justify-content:space-between;font-size:12px;margin-bottom:8px}
+.track{height:6px;background:#eff0f5;border-radius:9px;overflow:hidden}
+.track div{height:100%;background:#6558e8;border-radius:9px}
+.page{display:none}.page.active{display:block}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:15px}
+.toolbar input,.toolbar select{padding:10px;border:1px solid #e0e3ec;border-radius:8px;background:white}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:620px}
+th,td{text-align:left;padding:14px 13px;border-bottom:1px solid #eff0f5;font-size:12px}
+th{background:#fafbfe;color:#858b9b;font-size:10px;text-transform:uppercase}
+td button{margin:2px;padding:6px;border:1px solid #ddd;border-radius:5px;background:white;font-size:10px}
+.empty{text-align:center;padding:25px;color:#888;font-size:13px}
+.modal-bg{display:none;position:fixed;inset:0;background:#171b2b88;align-items:center;justify-content:center;padding:15px;z-index:10}
+.modal-bg.open{display:flex}
+.modal{background:white;width:500px;max-width:100%;max-height:90vh;overflow:auto;padding:25px;border-radius:15px}
+.modal h2{margin-bottom:20px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.field{display:flex;flex-direction:column;gap:7px}
+.field.full{grid-column:1/-1}
+.field label{font-size:12px;font-weight:bold}
+.field input,.field select,.field textarea{width:100%;padding:11px;border:1px solid #ddd;border-radius:8px}
+.form-actions{display:flex;justify-content:end;gap:10px;margin-top:20px}
+.secondary{padding:11px 15px;border:1px solid #ddd;background:white;border-radius:8px}
+.toast{position:fixed;bottom:20px;right:20px;padding:14px 18px;border-radius:9px;background:#20243a;color:white;display:none;font-size:13px}
+.toast.show{display:block}
+@media(max-width:1050px){
+ .sidebar{width:190px}
+ .stats{grid-template-columns:repeat(2,1fr)}
+ .layout{grid-template-columns:1fr}
+}
+@media(max-width:650px){
+ .app{display:block}
+ .sidebar{width:100%;padding:15px}
+ .logo{margin:0 0 12px}
+ .nav-title{display:none}
+ .nav{display:flex;gap:5px;overflow-x:auto}
+ .nav button{white-space:nowrap;width:auto;padding:10px}
+ main{padding:17px}
+ header h1{font-size:21px}
+ .profile{display:none}
+ .stats{gap:9px}
+ .card{padding:14px}
+ .stat-value{font-size:20px}
+ .welcome{align-items:flex-start}
+ .welcome .primary{padding:10px;font-size:11px}
+ .form-grid{grid-template-columns:1fr}
+ .field.full{grid-column:auto}
+}
+</style>
+</head>
+
+<body>
+<div class="app">
+
+<aside class="sidebar">
+  <div class="logo">₹ Bill<span>Mate</span></div>
+  <div class="nav-title">MAIN MENU</div>
+  <nav class="nav">
+    <button class="active" data-page="dashboard">▦ Dashboard</button>
+    <button data-page="bills">▤ All Bills</button>
+    <button data-page="payments">↗ Payment History</button>
+    <button data-page="analytics">▥ Analytics</button>
+    <button data-page="reminders">♧ Reminders</button>
+  </nav>
+</aside>
+
+<main>
+<header>
+  <div>
+    <h1 id="page-title">Dashboard</h1>
+    <p>Manage your bills and payments in one place.</p>
+  </div>
+  <div class="profile">CM</div>
+</header>
+
+<!-- DASHBOARD -->
+<section id="page-dashboard" class="page active">
+  <div class="welcome">
+    <div><h2>Welcome to BillMate!</h2><p>Here's your personal finance overview.</p></div>
+    <button class="primary" onclick="openModal()">+ Add Bill</button>
+  </div>
+
+  <div class="stats">
+    <div class="card">
+      <div class="stat-label">Total Bills</div>
+      <div class="stat-value" id="total">0</div>
+      <div class="stat-note">All your bills</div>
+    </div>
+    <div class="card">
+      <div class="stat-label">Amount Due</div>
+      <div class="stat-value orange" id="due">₹0</div>
+      <div class="stat-note">Unpaid bills</div>
+    </div>
+    <div class="card">
+      <div class="stat-label">Amount Paid</div>
+      <div class="stat-value green" id="paid">₹0</div>
+      <div class="stat-note">Recorded payments</div>
+    </div>
+    <div class="card">
+      <div class="stat-label">Overdue Bills</div>
+      <div class="stat-value red" id="overdue">0</div>
+      <div class="stat-note">Need your attention</div>
+    </div>
+  </div>
+
+  <div class="layout">
+    <section class="panel">
+      <div class="panel-head">
+        <div><h3>Recent Bills</h3><p>Your latest bill records</p></div>
+        <button class="view-btn" onclick="navigate('bills')">View All →</button>
+      </div>
+      <div id="recent-bills"></div>
+    </section>
+
+    <div>
+      <section class="panel">
+        <div class="panel-head">
+          <div><h3>Monthly Spending</h3><p>Illustrative spending overview</p></div>
+        </div>
+        <div class="chart" id="chart"></div>
+      </section>
+      <section class="panel">
+        <div class="panel-head">
+          <div><h3>Spending by Category</h3><p>Based on paid bills</p></div>
+        </div>
+        <div id="categories"></div>
+      </section>
+    </div>
+  </div>
+</section>
+
+<!-- ALL BILLS -->
+<section id="page-bills" class="page">
+  <div class="welcome">
+    <div><h2>All Bills</h2><p>Search, filter and manage your bills.</p></div>
+    <button class="primary" onclick="openModal()">+ Add Bill</button>
+  </div>
+  <div class="toolbar">
+    <input id="search" placeholder="Search bills..." oninput="renderBills()">
+    <select id="filter-status" onchange="renderBills()">
+      <option value="">All statuses</option>
+      <option>Pending</option><option>Upcoming</option>
+      <option>Paid</option><option>Overdue</option>
+    </select>
+  </div>
+  <section class="panel">
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Bill Name</th><th>Category</th><th>Due Date</th>
+          <th>Amount</th><th>Status</th><th>Actions</th>
+        </tr></thead>
+        <tbody id="bills-table"></tbody>
+      </table>
+    </div>
+  </section>
+</section>
+
+<!-- PAYMENT HISTORY -->
+<section id="page-payments" class="page">
+  <div class="welcome">
+    <div><h2>Payment History</h2><p>Review your recorded payments.</p></div>
+    <button class="primary" onclick="exportCSV()">Export CSV</button>
+  </div>
+  <section class="panel">
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Bill</th><th>Category</th><th>Payment Date</th>
+          <th>Method</th><th>Amount</th>
+        </tr></thead>
+        <tbody id="payments-table"></tbody>
+      </table>
+    </div>
+  </section>
+</section>
+
+<!-- ANALYTICS -->
+<section id="page-analytics" class="page">
+  <div class="welcome">
+    <div><h2>Expense Analytics</h2><p>Understand your spending habits.</p></div>
+  </div>
+  <div class="stats">
+    <div class="card"><div class="stat-label">Total Paid</div><div class="stat-value green" id="analytics-paid">₹0</div></div>
+    <div class="card"><div class="stat-label">Remaining Due</div><div class="stat-value orange" id="analytics-due">₹0</div></div>
+  </div>
+  <section class="panel">
+    <div class="panel-head"><h3>Category Breakdown</h3></div>
+    <div id="analytics-categories"></div>
+  </section>
+</section>
+
+<!-- REMINDERS -->
+<section id="page-reminders" class="page">
+  <div class="welcome">
+    <div><h2>Payment Reminders</h2><p>Review pending and overdue bills.</p></div>
+  </div>
+  <section class="panel">
+    <div class="panel-head"><h3>Bills Requiring Attention</h3></div>
+    <div id="reminder-list"></div>
+  </section>
+</section>
+
+</main>
+</div>
+
+<!-- ADD BILL POPUP -->
+<div class="modal-bg" id="modal">
+  <div class="modal">
+    <h2>Add New Bill</h2>
+    <form id="bill-form">
+      <div class="form-grid">
+        <div class="field full">
+          <label for="name">Bill Name *</label>
+          <input id="name" required placeholder="Electricity Bill">
+        </div>
+        <div class="field">
+          <label for="category">Category *</label>
+          <select id="category" required>
+            <option value="">Select category</option>
+            <option>Electricity</option><option>Water</option>
+            <option>Internet</option><option>Mobile</option>
+            <option>Rent</option><option>Education</option>
+            <option>Insurance</option><option>Subscriptions</option>
+            <option>Healthcare</option><option>Other</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="amount">Amount (₹) *</label>
+          <input id="amount" type="number" min="1" required placeholder="1500">
+        </div>
+        <div class="field">
+          <label for="date">Due Date *</label>
+          <input id="date" type="date" required>
+        </div>
+        <div class="field">
+          <label for="status">Status</label>
+          <select id="status">
+            <option>Pending</option><option>Upcoming</option>
+            <option>Paid</option><option>Overdue</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="frequency">Frequency</label>
+          <select id="frequency">
+            <option>One-time</option><option>Monthly</option>
+            <option>Weekly</option><option>Quarterly</option>
+            <option>Yearly</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="method">Payment Method</label>
+          <select id="method">
+            <option>UPI</option><option>Debit Card</option>
+            <option>Credit Card</option><option>Net Banking</option>
+            <option>Cash</option><option>Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="secondary" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="primary">Save Bill</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const sampleBills = [
+ {id:1,name:"Electricity Bill",category:"Electricity",amount:1500,date:"2026-10-17",status:"Upcoming",frequency:"Monthly",method:"UPI"},
+ {id:2,name:"Internet Bill",category:"Internet",amount:799,date:"2026-10-18",status:"Upcoming",frequency:"Monthly",method:"UPI"},
+ {id:3,name:"House Rent",category:"Rent",amount:10000,date:"2026-10-05",status:"Paid",frequency:"Monthly",method:"Bank Transfer",paidDate:"2026-10-04"},
+ {id:4,name:"Streaming Subscription",category:"Subscriptions",amount:649,date:"2026-10-20",status:"Upcoming",frequency:"Monthly",method:"UPI"},
+ {id:5,name:"College Fee",category:"Education",amount:5000,date:"2026-10-25",status:"Pending",frequency:"Quarterly",method:"UPI"},
+ {id:6,name:"Mobile Recharge",category:"Mobile",amount:399,date:"2026-10-10",status:"Overdue",frequency:"Monthly",method:"UPI"}
+];
+
+let bills;
+try {
+  bills = JSON.parse(localStorage.getItem("billmateData")) || sampleBills;
+} catch {
+  bills = sampleBills;
+}
+let nextId = Math.max(0,...bills.map(b=>b.id))+1;
+
+const money = n => "₹"+Number(n).toLocaleString("en-IN",{maximumFractionDigits:2});
+const icons = {
+ Electricity:"⚡",Internet:"⌁",Rent:"⌂",Subscriptions:"▣",
+ Education:"▤",Mobile:"▯",Insurance:"＋",Healthcare:"✚",Water:"◉"
+};
+const icon = category => icons[category] || "₹";
+const safe = value => String(value ?? "").replace(/[&<>"']/g,c=>({
+ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+}[c]));
+const dateText = date => new Date(date+"T00:00:00").toLocaleDateString("en-IN",{
+ day:"2-digit",month:"short",year:"numeric"
+});
+
+function save(){
+ try {
+  localStorage.setItem("billmateData",JSON.stringify(bills));
+ } catch(e) {
+  showToast("Could not save data in this browser.");
+ }
+}
+
+function showToast(message){
+ const el=document.getElementById("toast");
+ el.textContent=message;
+ el.classList.add("show");
+ clearTimeout(showToast.timer);
+ showToast.timer=setTimeout(()=>el.classList.remove("show"),2500);
+}
+
+function navigate(page){
+ document.querySelectorAll(".page").forEach(el=>{
+  el.classList.toggle("active",el.id==="page-"+page);
+ });
+ document.querySelectorAll("[data-page]").forEach(el=>{
+  el.classList.toggle("active",el.dataset.page===page);
+ });
+ const titles={
+  dashboard:"Dashboard",bills:"All Bills",
+  payments:"Payment History",analytics:"Expense Analytics",
+  reminders:"Payment Reminders"
+ };
+ document.getElementById("page-title").textContent=titles[page];
+ if(page==="bills") renderBills();
+}
+
+document.querySelectorAll("[data-page]").forEach(btn=>{
+ btn.addEventListener("click",()=>navigate(btn.dataset.page));
+});
+
+function billRow(b){
+ return `<div class="bill">
+  <div class="bill-icon">${icon(b.category)}</div>
+  <div class="bill-info">
+   <strong>${safe(b.name)}</strong>
+   <small>${safe(b.category)} · Due ${dateText(b.date)}</small>
+  </div>
+  <div class="amount">${money(b.amount)}</div>
+  <span class="status ${safe(b.status)}">${safe(b.status)}</span>
+ </div>`;
+}
+
+function renderStats(){
+ const paid=bills.filter(b=>b.status==="Paid").reduce((s,b)=>s+Number(b.amount),0);
+ const due=bills.filter(b=>b.status!=="Paid").reduce((s,b)=>s+Number(b.amount),0);
+ document.getElementById("total").textContent=bills.length;
+ document.getElementById("due").textContent=money(due);
+ document.getElementById("paid").textContent=money(paid);
+ document.getElementById("overdue").textContent=bills.filter(b=>b.status==="Overdue").length;
+ document.getElementById("analytics-paid").textContent=money(paid);
+ document.getElementById("analytics-due").textContent=money(due);
+}
+
+function renderBills(){
+ const query=(document.getElementById("search").value||"").toLowerCase();
+ const status=document.getElementById("filter-status").value;
+ const list=bills.filter(b=>
+  (b.name+" "+b.category).toLowerCase().includes(query) &&
+  (!status||b.status===status)
+ );
+ document.getElementById("bills-table").innerHTML=list.length?list.map(b=>`
+  <tr>
+   <td>${icon(b.category)} ${safe(b.name)}</td>
+   <td>${safe(b.category)}</td>
+   <td>${dateText(b.date)}</td>
+   <td>${money(b.amount)}</td>
+   <td><span class="status ${safe(b.status)}">${safe(b.status)}</span></td>
+   <td>
+    ${b.status!=="Paid"?`<button data-pay="${b.id}">Mark Paid</button>`:""}
+    <button data-delete="${b.id}">Delete</button>
+   </td>
+  </tr>`).join("") :
+  '<tr><td colspan="6" class="empty">No bills found.</td></tr>';
+
+ const payments=bills.filter(b=>b.status==="Paid");
+ document.getElementById("payments-table").innerHTML=payments.length?payments.map(b=>`
+  <tr><td>${safe(b.name)}</td><td>${safe(b.category)}</td>
+  <td>${dateText(b.paidDate||b.date)}</td><td>${safe(b.method||"—")}</td>
+  <td>${money(b.amount)}</td></tr>`).join("") :
+  '<tr><td colspan="5" class="empty">No payments recorded yet.</td></tr>';
+
+ const reminders=bills.filter(b=>b.status==="Pending"||b.status==="Upcoming"||b.status==="Overdue");
+ document.getElementById("reminder-list").innerHTML=reminders.length?
+  reminders.map(billRow).join(""):'<div class="empty">No pending bills!</div>';
+
+ document.getElementById("recent-bills").innerHTML=
+  [...bills].sort((a,b)=>a.date.localeCompare(b.date)).slice(0,5).map(billRow).join("") ||
+  '<div class="empty">Add your first bill to get started.</div>';
+}
+
+function renderCategories(){
+ const totals={};
+ bills.filter(b=>b.status==="Paid").forEach(b=>{
+  totals[b.category]=(totals[b.category]||0)+Number(b.amount);
+ });
+ const entries=Object.entries(totals).sort((a,b)=>b[1]-a[1]);
+ const total=entries.reduce((s,x)=>s+x[1],0)||1;
+ const html=entries.length?entries.map(([name,value])=>`
+  <div class="category">
+   <div class="category-row"><span>${icon(name)} ${safe(name)}</span><strong>${money(value)}</strong></div>
+   <div class="track"><div style="width:${value/total*100}%"></div></div>
+  </div>`).join(""):'<div class="empty">Mark bills as paid to see analytics.</div>';
+ document.getElementById("categories").innerHTML=html;
+ document.getElementById("analytics-categories").innerHTML=html;
+}
+
+function renderChart(){
+ const months=["May","Jun","Jul","Aug","Sep","Oct"];
+ const values=[6200,7800,6900,9400,8300,
+  bills.filter(b=>b.status==="Paid").reduce((s,b)=>s+Number(b.amount),0)];
+ const max=Math.max(...values,1);
+ document.getElementById("chart").innerHTML=values.map((v,i)=>`
+  <div class="bar-col">
+   <div class="bar ${i===5?"current":""}" title="${money(v)}"
+    style="height:${Math.max(5,v/max*100)}px"></div>
+   <small>${months[i]}</small>
+  </div>`).join("");
+}
+
+function renderAll(){
+ renderStats();
+ renderBills();
+ renderCategories();
+ renderChart();
+}
+
+function openModal(){
+ document.getElementById("modal").classList.add("open");
+}
+function closeModal(){
+ document.getElementById("modal").classList.remove("open");
+}
+
+document.getElementById("bill-form").addEventListener("submit",e=>{
+ e.preventDefault();
+ const name=document.getElementById("name").value.trim();
+ const category=document.getElementById("category").value;
+ const amount=Number(document.getElementById("amount").value);
+ const date=document.getElementById("date").value;
+ const status=document.getElementById("status").value;
+
+ if(!name||!category||amount<=0||!date){
+  showToast("Please fill in all required fields.");
+  return;
+ }
+
+ const bill={
+  id:nextId++,name,category,amount,date,status,
+  frequency:document.getElementById("frequency").value,
+  method:document.getElementById("method").value
+ };
+ if(status==="Paid") bill.paidDate=new Date().toISOString().slice(0,10);
+
+ bills.unshift(bill);
+ save();
+ renderAll();
+ e.target.reset();
+ closeModal();
+ navigate("bills");
+ showToast("Bill added successfully!");
+});
+
+document.getElementById("bills-table").addEventListener("click",e=>{
+ const pay=e.target.closest("[data-pay]");
+ const del=e.target.closest("[data-delete]");
+
+ if(pay){
+  const bill=bills.find(b=>b.id===Number(pay.dataset.pay));
+  if(bill){
+   bill.status="Paid";
+   bill.paidDate=new Date().toISOString().slice(0,10);
+   save();
+   renderAll();
+   showToast("Bill marked as paid!");
+  }
+ }
+
+ if(del){
+  const bill=bills.find(b=>b.id===Number(del.dataset.delete));
+  if(bill&&confirm("Delete "+bill.name+"?")){
+   bills=bills.filter(b=>b.id!==bill.id);
+   save();
+   renderAll();
+   showToast("Bill deleted.");
+  }
+ }
+});
+
+function exportCSV(){
+ const rows=[
+  ["Bill","Category","Payment Date","Method","Amount"],
+  ...bills.filter(b=>b.status==="Paid").map(b=>[
+   b.name,b.category,b.paidDate||b.date,b.method||"",b.amount
+  ])
+ ];
+ const csv=rows.map(row=>row.map(v=>
+  '"'+String(v).replace(/"/g,'""')+'"'
+ ).join(",")).join("\r\n");
+ const url=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));
+ const a=document.createElement("a");
+ a.href=url;
+ a.download="BillMate-Payment-History.csv";
+ a.click();
+ URL.revokeObjectURL(url);
+ showToast("Payment history exported!");
+}
+
+renderAll();
+</script>
+</body>
+</html>
